@@ -3,7 +3,7 @@ spring:
     name: jackal-springboot-speech
 
 speech:
-  service: tencent
+  service: "${SPEECH_SERVICE:tencent}"
   tencent:
     keyId: "${TENCENT_KEY:123456}"
     keySecret: "${TENCENT_SECRET:123456}"

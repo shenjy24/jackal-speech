@@ -1,10 +1,11 @@
 package com.jonas.speech.service.impl;
 
 import cn.hutool.core.codec.Base64;
+import cn.hutool.json.JSONUtil;
 import com.baidu.aip.speech.AipSpeech;
 import com.baidu.aip.speech.TtsResponse;
-import com.jonas.speech.service.SpeechService;
 import com.jonas.speech.common.SpeechType;
+import com.jonas.speech.service.SpeechService;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
@@ -56,7 +57,7 @@ public class BaiduSpeechService extends SpeechService {
         HashMap<String, Object> options = new HashMap<>();
         options.put("aue", 6);
         TtsResponse response = aipSpeech.synthesis(text, "zh", 1, options);
-        log.info("baidu speech synthesis, res: {}", response.getResult());
+        log.info("baidu speech synthesis, res: {}", JSONUtil.toJsonStr(response));
         return Base64.encode(response.getData());
     }
 }
