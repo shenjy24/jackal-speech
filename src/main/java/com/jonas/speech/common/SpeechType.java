@@ -12,4 +12,7 @@ public class SpeechType {
 
     // 百度服务
     public static final String BAIDU = "baidu";
+
+    // 微软服务
+    public static final String MICROSOFT = "microsoft";
 }

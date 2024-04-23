@@ -48,6 +48,12 @@
             <artifactId>java-sdk</artifactId>
             <version>4.16.18</version>
         </dependency>
+        <!-- 微软语音SDK -->
+        <dependency>
+            <groupId>com.microsoft.cognitiveservices.speech</groupId>
+            <artifactId>client-sdk</artifactId>
+            <version>1.37.0</version>
+        </dependency>
     </dependencies>
 
     <build>

@@ -4,13 +4,12 @@ import cn.hutool.core.util.IdUtil;
 import cn.hutool.json.JSONUtil;
 import com.jonas.speech.common.SpeechType;
 import com.jonas.speech.service.SpeechService;
+import com.jonas.speech.service.SpeechToTextCallback;
 import com.tencentcloudapi.asr.v20190614.AsrClient;
 import com.tencentcloudapi.asr.v20190614.models.SentenceRecognitionRequest;
 import com.tencentcloudapi.asr.v20190614.models.SentenceRecognitionResponse;
 import com.tencentcloudapi.common.Credential;
 import com.tencentcloudapi.common.exception.TencentCloudSDKException;
-import com.tencentcloudapi.common.profile.ClientProfile;
-import com.tencentcloudapi.common.profile.HttpProfile;
 import com.tencentcloudapi.tts.v20190823.TtsClient;
 import com.tencentcloudapi.tts.v20190823.models.TextToVoiceRequest;
 import com.tencentcloudapi.tts.v20190823.models.TextToVoiceResponse;
@@ -65,6 +64,11 @@ public class TencentSpeechService extends SpeechService {
             log.error("tencent speech to text error", e);
         }
         return "";
+    }
+
+    @Override
+    public void speechToText(byte[] audioData, SpeechToTextCallback callback) {
+        throw new RuntimeException("暂不支持该操作");
     }
 
     @Override

@@ -18,6 +18,14 @@ public abstract class SpeechService {
     public abstract String speechToText(byte[] audioData);
 
     /**
+     * 识别语音，转成文本
+     * 异步方法
+     *
+     * @param audioData 音频二进制数据
+     */
+    public abstract void speechToText(byte[] audioData, SpeechToTextCallback callback);
+
+    /**
      * 识别文本，转成语音
      *
      * @param text 文本

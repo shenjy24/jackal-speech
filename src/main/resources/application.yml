@@ -11,5 +11,7 @@ speech:
     appId: "${BAIDU_APPID:123456}"
     apiKey: "${BAIDU_KEY:123456}"
     secretKey: "${BAIDU_SECRET:123456}"
-
+  microsoft:
+    key: "${MICROSOFT_KEY:123456}"
+    region: "${MICROSOFT_REGION:eastasia}"
 

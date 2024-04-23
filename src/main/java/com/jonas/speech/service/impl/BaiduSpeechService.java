@@ -6,6 +6,7 @@ import com.baidu.aip.speech.AipSpeech;
 import com.baidu.aip.speech.TtsResponse;
 import com.jonas.speech.common.SpeechType;
 import com.jonas.speech.service.SpeechService;
+import com.jonas.speech.service.SpeechToTextCallback;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
@@ -50,6 +51,11 @@ public class BaiduSpeechService extends SpeechService {
             return texts.getString(0);
         }
         return "";
+    }
+
+    @Override
+    public void speechToText(byte[] audioData, SpeechToTextCallback callback) {
+        throw new RuntimeException("暂不支持该操作");
     }
 
     @Override
