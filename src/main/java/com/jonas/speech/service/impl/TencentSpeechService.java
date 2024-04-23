@@ -28,14 +28,10 @@ import java.util.Base64;
 @Service(SpeechType.TENCENT)
 public class TencentSpeechService extends SpeechService {
 
-    @Value("${speech.tencent.appId}")
-    private String appId;
     @Value("${speech.tencent.keyId}")
     private String keyId;
     @Value("${speech.tencent.keySecret}")
     private String keySecret;
-    @Value("${speech.tencent.region}")
-    private String region;
 
     private AsrClient client;
 

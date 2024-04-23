@@ -5,10 +5,8 @@ spring:
 speech:
   service: tencent
   tencent:
-    appId: "${TENCENT_APPID:123456}"
     keyId: "${TENCENT_KEY:123456}"
     keySecret: "${TENCENT_SECRET:123456}"
-    region: "ap-shanghai"
   baidu:
     appId: "${BAIDU_APPID:123456}"
     apiKey: "${BAIDU_KEY:123456}"
