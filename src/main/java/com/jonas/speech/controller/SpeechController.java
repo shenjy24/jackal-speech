@@ -40,7 +40,7 @@ public class SpeechController {
      */
     @SneakyThrows
     @PostMapping("/textToSpeech")
-    public byte[] textToSpeech(@RequestParam String text) {
+    public String textToSpeech(@RequestParam String text) {
         return speechService.textToSpeech(text);
     }
 }

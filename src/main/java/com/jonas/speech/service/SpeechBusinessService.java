@@ -35,7 +35,7 @@ public class SpeechBusinessService {
      * @param text 文本
      * @return 音频二进制数据
      */
-    public byte[] textToSpeech(String text) {
+    public String textToSpeech(String text) {
         SpeechService speechService = speechServiceFactory.getService();
         return speechService.textToSpeech(text);
     }

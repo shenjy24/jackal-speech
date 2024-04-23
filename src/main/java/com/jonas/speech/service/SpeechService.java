@@ -23,5 +23,5 @@ public abstract class SpeechService {
      * @param text 文本
      * @return 音频二进制数据
      */
-    public abstract byte[] textToSpeech(String text);
+    public abstract String textToSpeech(String text);
 }

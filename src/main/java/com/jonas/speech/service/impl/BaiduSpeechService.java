@@ -1,5 +1,6 @@
 package com.jonas.speech.service.impl;
 
+import cn.hutool.core.codec.Base64;
 import com.baidu.aip.speech.AipSpeech;
 import com.baidu.aip.speech.TtsResponse;
 import com.jonas.speech.service.SpeechService;
@@ -51,11 +52,11 @@ public class BaiduSpeechService extends SpeechService {
     }
 
     @Override
-    public byte[] textToSpeech(String text) {
+    public String textToSpeech(String text) {
         HashMap<String, Object> options = new HashMap<>();
         options.put("aue", 6);
         TtsResponse response = aipSpeech.synthesis(text, "zh", 1, options);
         log.info("baidu speech synthesis, res: {}", response.getResult());
-        return response.getData();
+        return Base64.encode(response.getData());
     }
 }

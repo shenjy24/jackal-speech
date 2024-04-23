@@ -1,6 +1,6 @@
 package com.jonas.speech.service.impl;
 
-import cn.hutool.json.JSON;
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.json.JSONUtil;
 import com.jonas.speech.common.SpeechType;
 import com.jonas.speech.service.SpeechService;
@@ -11,6 +11,9 @@ import com.tencentcloudapi.common.Credential;
 import com.tencentcloudapi.common.exception.TencentCloudSDKException;
 import com.tencentcloudapi.common.profile.ClientProfile;
 import com.tencentcloudapi.common.profile.HttpProfile;
+import com.tencentcloudapi.tts.v20190823.TtsClient;
+import com.tencentcloudapi.tts.v20190823.models.TextToVoiceRequest;
+import com.tencentcloudapi.tts.v20190823.models.TextToVoiceResponse;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,18 +36,17 @@ public class TencentSpeechService extends SpeechService {
     @Value("${speech.tencent.keySecret}")
     private String keySecret;
 
-    private AsrClient client;
+    // 语音转文本客户端
+    private AsrClient asrClient;
+    // 文本转语音客户端
+    private TtsClient ttsClient;
 
     @PostConstruct
     public void init() {
-        HttpProfile httpProfile = new HttpProfile();
-        httpProfile.setEndpoint("asr.tencentcloudapi.com");
-        // 实例化一个client选项，可选的，没有特殊需求可以跳过
-        ClientProfile clientProfile = new ClientProfile();
-        clientProfile.setHttpProfile(httpProfile);
-
         Credential cred = new Credential(keyId, keySecret);
-        client = new AsrClient(cred, "", clientProfile);
+
+        asrClient = new AsrClient(cred, "");
+        ttsClient = new TtsClient(cred, "ap-shanghai");
     }
 
 
@@ -56,7 +58,7 @@ public class TencentSpeechService extends SpeechService {
             request.setVoiceFormat("wav");
             request.setSourceType(1L);
             request.setData(Base64.getEncoder().encodeToString(audioData));
-            SentenceRecognitionResponse response = client.SentenceRecognition(request);
+            SentenceRecognitionResponse response = asrClient.SentenceRecognition(request);
             log.info("tencent speech to text response:{}", JSONUtil.toJsonStr(response));
             return response.getResult();
         } catch (TencentCloudSDKException e) {
@@ -66,7 +68,18 @@ public class TencentSpeechService extends SpeechService {
     }
 
     @Override
-    public byte[] textToSpeech(String text) {
-        return new byte[0];
+    public String textToSpeech(String text) {
+        try {
+            TextToVoiceRequest req = new TextToVoiceRequest();
+            req.setText(text);
+            req.setSessionId("tts-" + IdUtil.simpleUUID());
+            // 返回的resp是一个TextToVoiceResponse的实例，与请求对象对应
+            TextToVoiceResponse resp = ttsClient.TextToVoice(req);
+            log.info("tencent text to speech response: {}", JSONUtil.toJsonStr(resp));
+            return resp.getAudio();
+        } catch (TencentCloudSDKException e) {
+            log.error("tencent text to speech error", e);
+        }
+        return "";
     }
 }
