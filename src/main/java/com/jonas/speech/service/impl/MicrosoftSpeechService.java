@@ -1,6 +1,9 @@
 package com.jonas.speech.service.impl;
 
 import cn.hutool.core.codec.Base64;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpRequest;
+import cn.hutool.http.HttpResponse;
 import com.jonas.speech.common.SpeechType;
 import com.jonas.speech.service.SpeechService;
 import com.jonas.speech.service.SpeechToTextCallback;
@@ -8,6 +11,8 @@ import com.microsoft.cognitiveservices.speech.*;
 import com.microsoft.cognitiveservices.speech.audio.AudioConfig;
 import com.microsoft.cognitiveservices.speech.audio.AudioInputStream;
 import com.microsoft.cognitiveservices.speech.audio.PushAudioInputStream;
+import com.vdurmont.emoji.EmojiParser;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 微软语言服务
+ * <a href="https://learn.microsoft.com/zh-cn/azure/ai-services/speech-service/language-support?tabs=tts">语音列表</a>
  *
  * @author shenjy
  * @time 2024/4/15 11:12
@@ -32,11 +38,30 @@ public class MicrosoftSpeechService extends SpeechService {
     @Value("${speech.microsoft.region}")
     private String speechRegion;
 
+    // 获取访问令牌接口
+    private String issueTokenUrl;
+    private String textToSpeechUrl;
+
     private final Map<String, String> recognizeMap = new ConcurrentHashMap<>();
+
+    @PostConstruct
+    public void init() {
+        String issueTokenUrlTemplate = "https://{}.api.cognitive.microsoft.com/sts/v1.0/issueToken";
+        issueTokenUrl = StrUtil.format(issueTokenUrlTemplate, speechRegion);
+
+        String textToSpeechUrlTemplate = "https://{}.tts.speech.microsoft.com/cognitiveservices/v1";
+        textToSpeechUrl = StrUtil.format(textToSpeechUrlTemplate, speechRegion);
+    }
 
     @Override
     public String speechToText(byte[] audioData) {
-        throw new RuntimeException("暂不支持该操作");
+        // 获取访问令牌
+        String token = this.issueToken();
+        if (StrUtil.isBlank(token)) {
+            log.error("token 为空");
+            return "";
+        }
+        return "";
     }
 
     @Override
@@ -102,6 +127,43 @@ public class MicrosoftSpeechService extends SpeechService {
 
     @Override
     public String textToSpeech(String text) {
+        // 获取访问令牌
+        String token = this.issueToken();
+        if (StrUtil.isBlank(token)) {
+            log.error("token 为空");
+            return "";
+        }
+        log.info("microsoft token {}", token);
+
+        return textToSpeechWithHttp(EmojiParser.removeAllEmojis(text), token);
+    }
+
+    /**
+     * 文本转语音
+     */
+    private String textToSpeechWithHttp(String text, String token) {
+        String requestBodyTemplate = "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"https://www.w3.org/2001/mstts\" xml:lang=\"zh-CN\"><voice name=\"zh-CN-XiaoshuangNeural\">{}</voice></speak>";
+        String requestBody = StrUtil.format(requestBodyTemplate, text);
+
+        HttpRequest request = HttpRequest.post(textToSpeechUrl)
+                .header("Authorization", "Bearer " + token)
+                .header("Content-Type", "application/ssml+xml")
+                .header("X-Microsoft-OutputFormat", "riff-8khz-8bit-mono-alaw")
+                .header("User-Agent", "OpenFactor")
+                .body(requestBody)
+                .timeout(50000);
+        try (HttpResponse response = request.execute()) {
+            return Base64.encode(response.body());
+        }
+    }
+
+    /**
+     * 文本转语音，使用SDK，但是SDK在Docker中会有依赖问题
+     *
+     * @param text 文本
+     * @return 语音
+     */
+    private String textToSpeechWithSdk(String text) {
         try {
             // 从订阅信息创建语音配置
             SpeechConfig config = SpeechConfig.fromSubscription(speechKey, speechRegion);
@@ -139,5 +201,19 @@ public class MicrosoftSpeechService extends SpeechService {
             log.error("textToSpeech Exception: ", ex);
         }
         return null;
+    }
+
+    /**
+     * 获取访问令牌，有效期10分钟
+     *
+     * @return 访问令牌
+     */
+    private String issueToken() {
+        HttpRequest request = HttpRequest.post(issueTokenUrl)
+                .header("Ocp-Apim-Subscription-Key", speechKey)
+                .timeout(2000);
+        try (HttpResponse response = request.execute()) {
+            return response.body();
+        }
     }
 }

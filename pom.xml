@@ -54,6 +54,12 @@
             <artifactId>client-sdk</artifactId>
             <version>1.37.0</version>
         </dependency>
+        <!-- emoji表情依赖 -->
+        <dependency>
+            <groupId>com.vdurmont</groupId>
+            <artifactId>emoji-java</artifactId>
+            <version>4.0.0</version>
+        </dependency>
     </dependencies>
 
     <build>
