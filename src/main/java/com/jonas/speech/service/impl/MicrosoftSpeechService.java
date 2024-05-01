@@ -4,6 +4,8 @@ import cn.hutool.core.codec.Base64;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import com.jonas.speech.common.SpeechType;
 import com.jonas.speech.service.SpeechService;
 import com.jonas.speech.service.SpeechToTextCallback;
@@ -40,7 +42,10 @@ public class MicrosoftSpeechService extends SpeechService {
 
     // 获取访问令牌接口
     private String issueTokenUrl;
+    // 文字转语音接口
     private String textToSpeechUrl;
+    // 语音转文字接口
+    private String speechToTextUrl;
 
     private final Map<String, String> recognizeMap = new ConcurrentHashMap<>();
 
@@ -51,6 +56,9 @@ public class MicrosoftSpeechService extends SpeechService {
 
         String textToSpeechUrlTemplate = "https://{}.tts.speech.microsoft.com/cognitiveservices/v1";
         textToSpeechUrl = StrUtil.format(textToSpeechUrlTemplate, speechRegion);
+
+        String speechToTextTemplate = "https://{}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=zh-CN";
+        speechToTextUrl = StrUtil.format(speechToTextTemplate, speechRegion);
     }
 
     @Override
@@ -61,7 +69,19 @@ public class MicrosoftSpeechService extends SpeechService {
             log.error("token 为空");
             return "";
         }
-        return "";
+
+        HttpRequest request = HttpRequest.post(speechToTextUrl)
+                .header("Ocp-Apim-Subscription-Key", speechKey)
+                .header("Content-type", "audio/wav; codecs=audio/pcm; samplerate=16000")
+                .header("Accept", "application/json")
+                .body(audioData)
+                .timeout(50000);
+        try (HttpResponse response = request.execute()) {
+            String body = response.body();
+            log.info("microsoft speech to text response: {}", body);
+            JSONObject jsonObject = JSONUtil.parseObj(body);
+            return jsonObject.getStr("DisplayText");
+        }
     }
 
     @Override
