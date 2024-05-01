@@ -148,12 +148,12 @@ public class MicrosoftSpeechService extends SpeechService {
         HttpRequest request = HttpRequest.post(textToSpeechUrl)
                 .header("Authorization", "Bearer " + token)
                 .header("Content-Type", "application/ssml+xml")
-                .header("X-Microsoft-OutputFormat", "riff-8khz-8bit-mono-alaw")
+                .header("X-Microsoft-OutputFormat", "riff-8khz-16bit-mono-pcm")
                 .header("User-Agent", "OpenFactor")
                 .body(requestBody)
                 .timeout(50000);
         try (HttpResponse response = request.execute()) {
-            return Base64.encode(response.body());
+            return Base64.encode(response.bodyBytes());
         }
     }
 
