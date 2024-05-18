@@ -14,6 +14,8 @@ import com.tencentcloudapi.tts.v20190823.TtsClient;
 import com.tencentcloudapi.tts.v20190823.models.TextToVoiceRequest;
 import com.tencentcloudapi.tts.v20190823.models.TextToVoiceResponse;
 import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -27,7 +29,7 @@ import java.util.Base64;
  * @time 2023/8/30 19:56
  */
 @Slf4j
-@Service(SpeechType.TENCENT)
+//@Service(SpeechType.TENCENT)
 public class TencentSpeechService extends SpeechService {
 
     @Value("${speech.tencent.keyId}")
@@ -85,5 +87,10 @@ public class TencentSpeechService extends SpeechService {
             log.error("tencent text to speech error", e);
         }
         return "";
+    }
+
+    @Override
+    public void textToSpeechStream(String text, Long clientId) {
+
     }
 }

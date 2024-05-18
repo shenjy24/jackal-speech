@@ -14,4 +14,9 @@ speech:
   microsoft:
     key: "${MICROSOFT_KEY:123456}"
     region: "${MICROSOFT_REGION:eastasia}"
+  xunfei:
+    appId: "${XUNFEI_APPID:123456}"
+    apiKey: "${XUNFEI_APIKEY:123456}"
+    apiSecret: "${XUNFEI_APISECRET:123456}"
+    vcn: "aisbabyxu"
 

@@ -1,5 +1,8 @@
 package com.jonas.speech.service;
 
+import com.vdurmont.emoji.EmojiParser;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -38,5 +41,16 @@ public class SpeechBusinessService {
     public String textToSpeech(String text) {
         SpeechService speechService = speechServiceFactory.getService();
         return speechService.textToSpeech(text);
+    }
+
+    /**
+     * 识别文本，转成语音
+     * 流式接口
+     *
+     * @param text 文本
+     */
+    public void textToSpeechStream(String text, Long clientId) {
+        SpeechService speechService = speechServiceFactory.getService();
+        speechService.textToSpeechStream(EmojiParser.removeAllEmojis(text), clientId);
     }
 }

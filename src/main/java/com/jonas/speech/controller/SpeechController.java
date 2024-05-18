@@ -1,6 +1,8 @@
 package com.jonas.speech.controller;
 
 import com.jonas.speech.service.SpeechBusinessService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -42,5 +44,16 @@ public class SpeechController {
     @PostMapping("/textToSpeech")
     public String textToSpeech(@RequestParam String text) {
         return speechService.textToSpeech(text);
+    }
+
+    /**
+     * 识别文本，转成语音 //为了测试效果，直接进行播放，晚点将改为音频文件输出
+     *
+     * @param text 文本
+     */
+    @SneakyThrows
+    @PostMapping("/textToSpeechStream")
+    public void textToSpeechStream(@RequestParam String text, @RequestParam Long clientId) {
+        speechService.textToSpeechStream(text, clientId);
     }
 }
