@@ -16,11 +16,6 @@ import com.microsoft.cognitiveservices.speech.audio.AudioInputStream;
 import com.microsoft.cognitiveservices.speech.audio.PushAudioInputStream;
 import com.vdurmont.emoji.EmojiParser;
 import jakarta.annotation.PostConstruct;
-import jakarta.servlet.AsyncContext;
-import jakarta.servlet.AsyncEvent;
-import jakarta.servlet.AsyncListener;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
@@ -31,7 +26,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -276,6 +270,8 @@ public class MicrosoftSpeechService extends SpeechService {
                 .addHeader("Content-Type", "application/ssml+xml")
                 .addHeader("X-Microsoft-OutputFormat", "raw-8khz-8bit-mono-alaw")
                 .addHeader("User-Agent", "OpenFactor")
+                .addHeader("Transfer-Encoding", "chunked") // 开启分块传输
+                .addHeader("Accept-Encoding", "identity") // 禁用数据压缩
                 .build();
 
         log.info("microsoft request: {}", req);
@@ -298,8 +294,9 @@ public class MicrosoftSpeechService extends SpeechService {
                             Buffer buffer = new Buffer();
                             source.read(buffer, 1024);
                             byte[] data = buffer.readByteArray();
-                            log.info("microsoft data {}", data);
-                            sseService.pushObj(clientId, data);
+                            String encodedData = Base64.encode(data);
+                            log.info("microsoft data {}", encodedData);
+                            sseService.pushObj(clientId, encodedData);
                         }
                     }
                 } else {
