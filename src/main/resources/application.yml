@@ -1,6 +1,6 @@
 spring:
   application:
-    name: jackal-springboot-speech
+    name: jackal-speech
 
 speech:
   service: "${SPEECH_SERVICE:tencent}"
@@ -14,4 +14,8 @@ speech:
   microsoft:
     key: "${MICROSOFT_KEY:123456}"
     region: "${MICROSOFT_REGION:eastasia}"
-
+  aliyun:
+    appKey: "${ALIYUN_APPKEY:123456}"
+    accessKeyId: "${ALIYUN_KEYID:123456}"
+    accessKeySecret: "${ALIYUN_KEYSECRET:123456}"
+    url: "https://nls-gateway-cn-shanghai.aliyuncs.com/stream/v1/asr"
