@@ -8,6 +8,8 @@ import com.jonas.speech.common.SpeechType;
 import com.jonas.speech.service.SpeechService;
 import com.jonas.speech.service.SpeechToTextCallback;
 import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -65,5 +67,9 @@ public class BaiduSpeechService extends SpeechService {
         TtsResponse response = aipSpeech.synthesis(text, "zh", 1, options);
         log.info("baidu speech synthesis, res: {}", JSONUtil.toJsonStr(response));
         return Base64.encode(response.getData());
+    }
+
+    @Override
+    public void textToSpeechStream(String text, Long clientId) {
     }
 }

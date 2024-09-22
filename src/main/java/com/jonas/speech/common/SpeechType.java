@@ -16,6 +16,9 @@ public class SpeechType {
     // 微软服务
     public static final String MICROSOFT = "microsoft";
 
+    // 讯飞服务
+    public static final String XUNFEI = "xunfei";
+
     // 阿里云服务
     public static final String ALIYUN = "aliyun";
 }

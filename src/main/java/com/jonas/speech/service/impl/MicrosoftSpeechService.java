@@ -9,6 +9,7 @@ import cn.hutool.json.JSONUtil;
 import com.jonas.speech.common.SpeechType;
 import com.jonas.speech.service.SpeechService;
 import com.jonas.speech.service.SpeechToTextCallback;
+import com.jonas.speech.service.SseService;
 import com.microsoft.cognitiveservices.speech.*;
 import com.microsoft.cognitiveservices.speech.audio.AudioConfig;
 import com.microsoft.cognitiveservices.speech.audio.AudioInputStream;
@@ -17,9 +18,15 @@ import com.vdurmont.emoji.EmojiParser;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.*;
+import okio.Buffer;
+import okio.BufferedSource;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -34,6 +41,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 @Service(SpeechType.MICROSOFT)
 public class MicrosoftSpeechService extends SpeechService {
+
+    private final SseService sseService;
 
     @Value("${speech.microsoft.key}")
     private String speechKey;
@@ -162,7 +171,8 @@ public class MicrosoftSpeechService extends SpeechService {
      * 文本转语音
      */
     private String textToSpeechWithHttp(String text, String token) {
-        String requestBodyTemplate = "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"https://www.w3.org/2001/mstts\" xml:lang=\"zh-CN\"><voice name=\"zh-CN-XiaoshuangNeural\">{}</voice></speak>";
+        // https://learn.microsoft.com/zh-cn/azure/ai-services/speech-service/language-support?tabs=tts
+        String requestBodyTemplate = "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"https://www.w3.org/2001/mstts\" xml:lang=\"zh-CN\"><voice name=\"zh-CN-XiaoyouNeural\" effect=\"eq_car\">{}</voice></speak>";
         String requestBody = StrUtil.format(requestBodyTemplate, text);
 
         HttpRequest request = HttpRequest.post(textToSpeechUrl)
@@ -235,5 +245,64 @@ public class MicrosoftSpeechService extends SpeechService {
         try (HttpResponse response = request.execute()) {
             return response.body();
         }
+    }
+
+    @Override
+    public void textToSpeechStream(String text, Long clientId) {
+        // 获取访问令牌
+        String token = this.issueToken();
+        if (StrUtil.isBlank(token)) {
+            log.error("token 为空");
+            return;
+        }
+
+        // https://learn.microsoft.com/zh-cn/azure/ai-services/speech-service/language-support?tabs=tts
+        String requestBodyTemplate = "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"https://www.w3.org/2001/mstts\" xml:lang=\"zh-CN\"><voice name=\"zh-CN-XiaoyouNeural\" effect=\"eq_car\">{}</voice></speak>";
+        String requestBody = StrUtil.format(requestBodyTemplate, text);
+
+        log.info("microsoft token {}", token);
+
+        OkHttpClient client = new OkHttpClient();
+        Request req = new Request.Builder()
+                .url(textToSpeechUrl)
+                .post(RequestBody.create(requestBody.getBytes(StandardCharsets.UTF_8)))
+                .addHeader("Authorization", "Bearer " + token)
+                .addHeader("Content-Type", "application/ssml+xml")
+                .addHeader("X-Microsoft-OutputFormat", "raw-8khz-8bit-mono-alaw")
+                .addHeader("User-Agent", "OpenFactor")
+                .addHeader("Transfer-Encoding", "chunked") // 开启分块传输
+                .addHeader("Accept-Encoding", "identity") // 禁用数据压缩
+                .build();
+
+        log.info("microsoft request: {}", req);
+        client.newCall(req).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                log.error("microsoft on failure", e);
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                log.info("microsoft on response, {}", response);
+                if (response.isSuccessful()) {
+                    ResponseBody responseBody = response.body();
+                    if (null != responseBody) {
+                        BufferedSource source = responseBody.source();
+                        // 请求整个响应体
+                        source.request(Long.MAX_VALUE);
+                        while (!source.exhausted()) {
+                            Buffer buffer = new Buffer();
+                            source.read(buffer, 1024);
+                            byte[] data = buffer.readByteArray();
+                            String encodedData = Base64.encode(data);
+                            log.info("microsoft data {}", encodedData);
+                            sseService.pushObj(clientId, encodedData);
+                        }
+                    }
+                } else {
+                    log.error("microsoft error: code={}, message={}", response.code(), response.message());
+                }
+            }
+        });
     }
 }
